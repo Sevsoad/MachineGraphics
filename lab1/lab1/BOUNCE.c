@@ -12,11 +12,13 @@ GLfloat windowHeight;
 GLfloat xBackground = 150.0f;
 GLfloat yBackground = -30.0f;
 
-GLfloat xCoach = 150.0f;
-GLfloat yCoach = -30.0f;
+GLfloat xCoach = 0.0f;
+GLfloat yCoach = 1.0f;
 
 GLfloat xrsize = 40;
 GLfloat yrsize = 25;
+GLfloat radius = 8.0f; // wheels radius
+
 
 //Size of a step (speed)
 GLfloat xBackgrStep = 1.0f;
@@ -24,23 +26,24 @@ GLfloat yBackgrStep = 1.0f;
 
 
 float x2,y2 = 0.0f;
-float radius = 5.0f; 
+ 
 int j = 0;
+//GLfloat tmpRadius = 0.0f;
 
 
 void DrawCircle(int xPos, int yPos) {
-    glBegin(GL_LINES);
+	glColor3f(0.7f, 0.7f, 0.3f);
 
-	glColor3f(1.0f,1.0f,0.5f); 
-	x2 = (float)radius * cos(359 * PI/180.0f); 
-	y2 = (float)radius * sin(359 * PI/180.0f);
-	for(j = 0; j < 360; j++) 
+	glBegin(GL_TRIANGLE_FAN);
+	
+	for (j = 0; j < 360; j += 5)
 	{
-		glVertex2f(xPos + x2,yPos + y2);  
-		x2 = (float)radius * cos(j * PI/180.0f);  
-		y2 = (float)radius * sin(j * PI/180.0f);
-		glVertex2f(xPos + x2,yPos + y2); 
-	} 
+		glVertex2f(xPos + x2, yPos + y2);
+		x2 = (float)radius * cos(j);
+		y2 = (float)radius * sin(j);
+		glVertex2f(xPos + x2, yPos + y2);
+	}
+	
 	glEnd();
 }
 
@@ -56,26 +59,36 @@ void DrawTrampoline(int xPos, int yPos)
 
 void DrawCoach(int xPos, int yPos)
 {
-	glColor3f(0.5f, 0.0f, 0.5f);	
-	glRectf(xPos, yPos, xPos + xrsize, yPos - yrsize);
+	//coach body
+	glColor3f(0.48f, 0.17f, 0.08f);	
+	glRectf(xCoach + 10, yCoach, xCoach +  30, yCoach - 28);
+	glRectf(xCoach - 5, yCoach, xCoach + 10, yCoach - 18);
+	glRectf(xCoach, yCoach, xCoach + 45, yCoach - 18);
 
-	glColor3f(0.3f, 0.1f, 0.2f);
-	glRectf(6, 20, 0, 3);
+	glBegin(GL_TRIANGLES);
+	glVertex3f(xCoach - 5, yCoach, 0.0);
+	glVertex3f(xCoach - 9, yCoach, 0.0);
+	glVertex3f(xCoach - 5, yCoach - 18, 0.0);
+	glEnd();
 
-	glColor3f(0.0f, 0.0f, 0.0f);
-	glRectf(xrsize / 2 - 3, yrsize / 2 + 3, xrsize / 2 + 4, yrsize / 2 - 12);
+	glBegin(GL_TRIANGLES);
+	glVertex3f(xCoach + 45, yCoach, 0.0);
+	glVertex3f(xCoach + 49, yCoach, 0.0);
+	glVertex3f(xCoach + 45, yCoach - 18, 0.0);
+	glEnd();
 
-	//sedenye kuchera
-	glRectf(xrsize, yrsize / 2 + 3, xrsize + 4, yrsize / 2 - 8);
-	glRectf(xrsize, yrsize / 2 + -4, xrsize + 8, yrsize / 2 - 8);
-
-	glColor3f(1.0f, 5.0f, 0.5f);
-	glRectf(xrsize / 2 - 17, yrsize / 2 + 3, xrsize / 2 - 9, yrsize / 2 - 4);
-	glRectf(xrsize / 2 + 17, yrsize / 2 + 3, xrsize / 2 + 9, yrsize / 2 - 4);
+	//windows
+	glColor3f(0.8f, 0.7f, 0.5f);
+	glRectf(xCoach , yCoach - 3, xCoach + 10, yCoach - 13); //left
+	glRectf(xCoach + 30, yCoach - 3, xCoach + 40, yCoach - 13); //right
+	
+	//door
+	glColor3f(0.4f, 0.3f, 0.2f);
+	glRectf(xCoach + 14, yCoach + - 3, xCoach + 26, yCoach - 27);
 
 	//Wheels
-	DrawCircle(xrsize - 40, yrsize);
-	DrawCircle(xrsize, yrsize);
+	DrawCircle(xCoach - 5, yCoach - 23); // left
+	DrawCircle(xCoach + 45, yCoach - 23); //right
 }
 
 ///////////////////////////////////////////////////////////
