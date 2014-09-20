@@ -12,52 +12,80 @@ GLfloat windowHeight;
 GLfloat xBackground = 150.0f;
 GLfloat yBackground = -30.0f;
 
-GLfloat xCoach = 0.0f;
+GLfloat xCoach = -150.0f;
 GLfloat yCoach = 1.0f;
 
-GLfloat xrsize = 40;
-GLfloat yrsize = 25;
-GLfloat radius = 8.0f; // wheels radius
+GLfloat wheelRadius = 8.0f; 
+int spokesRotationDelay = 20;
+int spokesRotationTime = 0;
 
 
 //Size of a step (speed)
-GLfloat xBackgrStep = 1.0f;
-GLfloat yBackgrStep = 1.0f;
+GLfloat xBackgrStep = 2.0f;
+GLfloat yBackgrStep = 2.0f;
 
-
-float x2,y2 = 0.0f;
+GLfloat xCoachStep = 1.0f;
+float x2,y2 = 0.0f; //tmp values to draw circle
  
 int j = 0;
-//GLfloat tmpRadius = 0.0f;
 
 
 void DrawCircle(int xPos, int yPos) {
-	glColor3f(0.7f, 0.7f, 0.3f);
+	glColor3ub(139, 119, 101);
 
 	glBegin(GL_TRIANGLE_FAN);
 	
 	for (j = 0; j < 360; j += 5)
 	{
 		glVertex2f(xPos + x2, yPos + y2);
-		x2 = (float)radius * cos(j);
-		y2 = (float)radius * sin(j);
+		x2 = (float)wheelRadius * cos(j);
+		y2 = (float)wheelRadius * sin(j);
 		glVertex2f(xPos + x2, yPos + y2);
 	}
 	
 	glEnd();
 }
 
-void DrawTrampoline(int xPos, int yPos)
+void DrawSpokes(GLfloat xPos, GLfloat yPos)
+{
+	glColor3ub(255, 127, 36);
+	glBegin(GL_LINES);
+	if (spokesRotationTime >= spokesRotationDelay)
+	{
+		
+		glVertex2f(xPos - wheelRadius/1.4f, yPos + wheelRadius/1.5f);
+		glVertex2f(xPos + wheelRadius / 1.4f, yPos - wheelRadius / 1.5f);
+		glVertex2f(xPos + wheelRadius / 1.4f, yPos + wheelRadius / 1.5f);
+		glVertex2f(xPos - wheelRadius / 1.4f, yPos - wheelRadius / 1.5f);
+		
+		spokesRotationTime++;
+		if (spokesRotationTime >= spokesRotationDelay * 2)
+		{
+			spokesRotationTime = 0;
+		}
+	}
+	else 
+	{
+		glVertex2f(xPos - wheelRadius, yPos );
+		glVertex2f(xPos + wheelRadius, yPos);
+		glVertex2f(xPos, yPos - wheelRadius);
+		glVertex2f(xPos, yPos + wheelRadius);
+		spokesRotationTime++;
+	}
+	glEnd();	
+}
+
+void DrawTrampoline(int xWheel, int yWheel)
 {
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glBegin(GL_TRIANGLES);
-	glVertex3f(-50.0 + xPos, 0.0 + yPos, 0.0);
-	glVertex3f(0.0 + xPos, 30.0 + yPos, 0.0);
-	glVertex3f(0.0 + xPos, 0.0 + yPos, 0.0);
+	glVertex3f(-50.0 + xWheel, 0.0 + yWheel, 0.0);
+	glVertex3f(0.0 + xWheel, 30.0 + yWheel, 0.0);
+	glVertex3f(0.0 + xWheel, 0.0 + yWheel, 0.0);
 	glEnd();
 }
 
-void DrawCoach(int xPos, int yPos)
+void DrawCoach()
 {
 	//coach body
 	glColor3f(0.48f, 0.17f, 0.08f);	
@@ -89,7 +117,12 @@ void DrawCoach(int xPos, int yPos)
 	//Wheels
 	DrawCircle(xCoach - 5, yCoach - 23); // left
 	DrawCircle(xCoach + 45, yCoach - 23); //right
+
+	//Rotating spokes
+	DrawSpokes(xCoach - 5, yCoach - 23);
+	DrawSpokes(xCoach + 45, yCoach - 23);
 }
+
 
 ///////////////////////////////////////////////////////////
 // Called to draw scene
@@ -113,33 +146,13 @@ void RenderScene(void)
 // Called by GLUT library when idle (window not being
 // resized or moved)
 void TimerFunction(int value)
-    {
-    // Reverse direction when you reach left or right edge
-    /*if(xBackground > windowWidth-xrsize || xBackground < -windowWidth)
-        xBackgrStep = -xBackgrStep;*/
+{
+	xBackground -= xBackgrStep;
+	xCoach += xCoachStep;
 
-    // Reverse direction when you reach top or bottom edge
-    /*if(yBackground > windowHeight || yBackground < -windowHeight + xrsize)
-        yBackgrStep = -yBackgrStep;*/
-		xBackground -= xBackgrStep;
-    //yBackground += yBackgrStep;
-
-    // Check bounds. This is in case the window is made
-    // smaller while the rectangle is bouncing and the 
-	// rectangle suddenly finds itself outside the new
-    // clipping volume
-    /*if(xBackground > (windowWidth-rsize + xBackgrStep))
-        xBackground = windowWidth-rsize-1;
-	else if(xBackground < -(windowWidth + xBackgrStep))
-		xBackground = -windowWidth -1;
-
-    if(yBackground > (windowHeight + yBackgrStep))
-        yBackground = windowHeight-1; 
-	else if(yBackground < -(windowHeight - rsize + yBackgrStep))
-		yBackground = -windowHeight + rsize - 1;*/
-    glutPostRedisplay();
-    glutTimerFunc(25,TimerFunction, 1);
-    }
+	glutPostRedisplay();
+	glutTimerFunc(25, TimerFunction, 1);
+}
 
 
 ///////////////////////////////////////////////////////////
