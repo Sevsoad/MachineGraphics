@@ -24,7 +24,7 @@ int spokesRotationTime = 0;
 GLfloat xBackgrStep = 2.0f;
 GLfloat yBackgrStep = 2.0f;
 
-GLfloat xCoachStep = 1.0f;
+GLfloat xCoachStep = 2.0f;
 float x2,y2 = 0.0f; //tmp values to draw circle
  
 int j = 0;
@@ -37,7 +37,6 @@ void DrawCircle(int xPos, int yPos) {
 	
 	for (j = 0; j < 360; j += 5)
 	{
-		glVertex2f(xPos + x2, yPos + y2);
 		x2 = (float)wheelRadius * cos(j);
 		y2 = (float)wheelRadius * sin(j);
 		glVertex2f(xPos + x2, yPos + y2);
@@ -77,7 +76,7 @@ void DrawSpokes(GLfloat xPos, GLfloat yPos)
 
 void DrawTrampoline(int xWheel, int yWheel)
 {
-	glColor3f(0.0f, 0.0f, 0.0f);
+	glColor3ub(135, 135, 135);
 	glBegin(GL_TRIANGLES);
 	glVertex3f(-50.0 + xWheel, 0.0 + yWheel, 0.0);
 	glVertex3f(0.0 + xWheel, 30.0 + yWheel, 0.0);
@@ -88,7 +87,7 @@ void DrawTrampoline(int xWheel, int yWheel)
 void DrawCoach()
 {
 	//coach body
-	glColor3f(0.48f, 0.17f, 0.08f);	
+	glColor3ub(77, 77, 77);
 	glRectf(xCoach + 10, yCoach, xCoach +  30, yCoach - 28);
 	glRectf(xCoach - 5, yCoach, xCoach + 10, yCoach - 18);
 	glRectf(xCoach, yCoach, xCoach + 45, yCoach - 18);
@@ -105,13 +104,24 @@ void DrawCoach()
 	glVertex3f(xCoach + 45, yCoach - 18, 0.0);
 	glEnd();
 
+	//roof
+	glColor3ub(0, 0, 0);
+	glBegin(GL_POLYGON);
+	glVertex2f(xCoach - 9, yCoach);
+	glVertex2f(xCoach , yCoach + 8);
+	glVertex2f(xCoach + 5, yCoach + 10);
+	glVertex2f(xCoach + 36, yCoach + 10);
+	glVertex2f(xCoach + 41, yCoach + 8);
+	glVertex2f(xCoach + 49, yCoach);
+	glEnd();
+
 	//windows
-	glColor3f(0.8f, 0.7f, 0.5f);
-	glRectf(xCoach , yCoach - 3, xCoach + 10, yCoach - 13); //left
-	glRectf(xCoach + 30, yCoach - 3, xCoach + 40, yCoach - 13); //right
+	glColor3ub(244, 164, 96);
+	glRectf(xCoach + 3, yCoach - 3, xCoach + 9, yCoach - 13); //left
+	glRectf(xCoach + 31, yCoach - 3, xCoach + 37, yCoach - 13); //right
 	
 	//door
-	glColor3f(0.4f, 0.3f, 0.2f);
+	glColor3ub(94, 94, 94);
 	glRectf(xCoach + 14, yCoach + - 3, xCoach + 26, yCoach - 27);
 
 	//Wheels
@@ -131,7 +141,7 @@ void RenderScene(void)
 	// Clear the window with current clearing color
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glColor3f(0.3f, 0.7f, 0.4f);
+	glColor3ub(0, 100, 0);
 	glRectf(-400, -30, 400, -300);
 
 	DrawTrampoline(xBackground, yBackground);
@@ -206,7 +216,7 @@ int main(int argc, char* argv[])
 	{
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	glutInitWindowSize(800,600);
+	glutInitWindowSize(1200,600);
         glutCreateWindow("Bounce");
 
 	glutDisplayFunc(RenderScene);
