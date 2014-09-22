@@ -13,16 +13,25 @@ GLfloat xCoach = -150.0f;
 GLfloat yCoach = 1.0f;
 
 GLfloat wheelRadius = 8.0f; 
-int spokesRotationDelay = 20;
+int spokesRotationDelay = 10;
 int spokesRotationTime = 0;
 
 //fly scene
 GLfloat flightLength = -40;
+int isCrashed = 0;
+int xLeftWheelSpeed = 0;
+int yLeftWheelSpeed = 0;
+int xRightWheelSpeed = 0;
+int yRightWheelSpeed = 0;
+int xRoofPos = 0;
+int yRoofPos = 0;
+int xRightCrashPart = 0;
+int yRightCrashPart = 0;
 
 //Size of a step (speed)
 GLfloat xBackgrStep = 2.0f;
 GLfloat yBackgrStep = 0.0f;
-GLfloat xCoachStep = 1.0f;
+GLfloat coachStep = 1.0f;
 
 //other vars
 float x2,y2 = 0.0f; //tmp values to draw circle
@@ -31,7 +40,7 @@ int j = 0;
 GLfloat angle = 0;
 #define PI 3.14159265
 
-void DrawCircle(int xPos, int yPos) {
+void DrawCircle(int xPos, int yPos, int xSpeed, int ySpeed) {
 	glColor3ub(139, 119, 101);
 
 	glBegin(GL_TRIANGLE_FAN);
@@ -40,7 +49,7 @@ void DrawCircle(int xPos, int yPos) {
 	{
 		x2 = (float)wheelRadius * cos(j);
 		y2 = (float)wheelRadius * sin(j);
-		glVertex2f(xPos + x2, yPos + y2);
+		glVertex2f(xPos + x2 + xSpeed, yPos + y2 + ySpeed);
 	}
 	
 	glEnd();
@@ -98,7 +107,7 @@ void DrawCoach()
 	glColor3ub(77, 77, 77);
 	glRectf(xCoach + 10, yCoach, xCoach + 30, yCoach - 28);
 	glRectf(xCoach - 5, yCoach, xCoach + 10, yCoach - 18);
-	glRectf(xCoach, yCoach, xCoach + 45, yCoach - 18);
+	glRectf(xCoach + 20 + xRightCrashPart, yCoach + yRightCrashPart, xCoach + 45 + xRightCrashPart, yCoach - 18 + yRightCrashPart);
 
 	glBegin(GL_TRIANGLES);
 	glVertex3f(xCoach - 5, yCoach, 0.0);
@@ -108,38 +117,50 @@ void DrawCoach()
 
 
 	glBegin(GL_TRIANGLES);
-	glVertex3f(xCoach + 45, yCoach, 0.0);
-	glVertex3f(xCoach + 49, yCoach, 0.0);
-	glVertex3f(xCoach + 45, yCoach - 18, 0.0);
+	glVertex3f(xCoach + 45 + xRightCrashPart, yCoach + yRightCrashPart, 0.0);
+	glVertex3f(xCoach + 49 + xRightCrashPart, yCoach + yRightCrashPart, 0.0);
+	glVertex3f(xCoach + 45 + xRightCrashPart, yCoach - 18 + yRightCrashPart, 0.0);
 	glEnd();
 
 	//roof
 	glColor3ub(0, 0, 0);
 	glBegin(GL_POLYGON);
-	glVertex2f(xCoach - 9, yCoach);
-	glVertex2f(xCoach , yCoach + 8);
-	glVertex2f(xCoach + 5, yCoach + 10);
-	glVertex2f(xCoach + 36, yCoach + 10);
-	glVertex2f(xCoach + 41, yCoach + 8);
-	glVertex2f(xCoach + 49, yCoach);
+	glVertex2f(xCoach - 9 + xRoofPos, yCoach + yRoofPos);
+	glVertex2f(xCoach + xRoofPos, yCoach + 8 + yRoofPos);
+	glVertex2f(xCoach + 5 + xRoofPos, yCoach + 10 + yRoofPos);
+	glVertex2f(xCoach + 36 + xRoofPos, yCoach + 10 + yRoofPos);
+	glVertex2f(xCoach + 41 + xRoofPos, yCoach + 8 + yRoofPos);
+	glVertex2f(xCoach + 49 + xRoofPos, yCoach + yRoofPos);
 	glEnd();
 
 	//windows
-	glColor3ub(244, 164, 96);
+	if (isCrashed && yCoach < -40) {
+		glColor3ub(31, 39, 39);
+	}
+	else {
+		glColor3ub(244, 164, 96);
+	}	
 	glRectf(xCoach + 3, yCoach - 3, xCoach + 9, yCoach - 13); //left
-	glRectf(xCoach + 31, yCoach - 3, xCoach + 37, yCoach - 13); //right
+	glRectf(xCoach + 31 + xRightCrashPart, yCoach - 3 + yRightCrashPart, xCoach + 37 + xRightCrashPart, yCoach - 13 + yRightCrashPart); //right
 	
 	//door
 	glColor3ub(94, 94, 94);
 	glRectf(xCoach + 14, yCoach + - 3, xCoach + 26, yCoach - 27);
 
 	//Wheels
-	DrawCircle(xCoach - 5, yCoach - 23); // left
-	DrawCircle(xCoach + 45, yCoach - 23); //right
+	if (isCrashed == 0){
+		DrawCircle(xCoach - 5, yCoach - 23, xLeftWheelSpeed, yLeftWheelSpeed); // left
+		DrawCircle(xCoach + 45, yCoach - 23, 0, 0); //right
+		//Rotating spokes
+		DrawSpokes(xCoach - 5, yCoach - 23); //left
+		DrawSpokes(xCoach + 45, yCoach - 23); //right
+	}
+	else {
+		DrawCircle(xCoach - 5, yCoach - 23, xLeftWheelSpeed, yLeftWheelSpeed); // left
+		DrawCircle(xCoach + 45, yCoach - 23, xRightWheelSpeed, yRightWheelSpeed); //right
+	}
 
-	//Rotating spokes
-	DrawSpokes(xCoach - 5, yCoach - 23); //left
-	DrawSpokes(xCoach + 45, yCoach - 23); //right
+	
 	
 	glPopMatrix();
 }
@@ -160,35 +181,61 @@ void RenderScene(void)
 void TimerFunction(int value)
 {
 	xTrampoline -= xBackgrStep;
-
+	if (isCrashed == 0)
 	if (xCoach + 95 >= xTrampoline && xCoach < xTrampoline + 120 && xCoach < flightLength - 10)
 	{
-		yCoach += xCoachStep;
+		yCoach += coachStep;
 
 		if (angle < 36)
 			angle += 3;
 
-		xCoach += xCoachStep* 0.8;
+		xCoach += coachStep* 0.8;
 	}
 	else
 	{
 		if (xCoach >= flightLength - 10 && xCoach < flightLength + 7)
 		{
-			xCoach += xCoachStep * 0.8;
+			xCoach += coachStep * 0.8;
 		} else if (xCoach >= flightLength + 7)
 		{
 			if (xCoach >= flightLength + 10)
 			{
-				yCoach -= xCoachStep * 1;
-				xCoach += xCoachStep * 0.2;
+				yCoach -= coachStep * 1.2;
+				xCoach += coachStep * 0.2;
+				if (yCoach <= -35){
+					isCrashed = 1;
+				}
 			}				
 			else{
-				yCoach -= xCoachStep * 0.4;
-				xCoach += xCoachStep * 0.5;
+				yCoach -= coachStep * 0.4;
+				xCoach += coachStep * 0.5;				
 			}				
 			
 		} else{
-			xCoach += xCoachStep;
+			xCoach += coachStep;
+		}		
+	}
+	else
+	{
+		xLeftWheelSpeed -= 2;
+		yLeftWheelSpeed += 10;
+		xRightWheelSpeed += 4;
+		yLeftWheelSpeed += 1;	
+
+		if (xRightCrashPart < 170)
+		{
+			xRightCrashPart += 4;
+			yRightCrashPart -= 3;
+		}
+
+		if (xRoofPos > -17)
+		{
+			xRoofPos -= 1;			
+		}
+
+		if (yCoach > -47) 
+		{
+			yCoach -= coachStep;
 		}		
 	}
 
@@ -240,7 +287,7 @@ int main(int argc, char* argv[])
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glutInitWindowSize(1200,600);
-        glutCreateWindow("Bounce");
+    glutCreateWindow("Coach adventures");
 
 	glutDisplayFunc(RenderScene);
     glutReshapeFunc(ChangeSize);
