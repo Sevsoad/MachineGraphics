@@ -14,18 +14,25 @@ float angle = 0.0f;
 // actual vector representing the camera's direction
 float lx = 0.0f, lz = -1.0f;
 // XZ position of the camera
-float x = 0.0f, z = 5.0f;
+float x = 0.0f, z = 7.0f;
 
 float deltaAngle = 0.0f;
 float coachPos = 0.0f;
-float coachSpan = 50.0f;
+float coachSpan = 40.0f;
 float deltaMove = 0;
-float rotateAngle = 0;
+float wheelAngle = 0;
 float rotationCount = 0;
-float rangeFromPlayer = 10;
+float rangeFromPlayer = -7;
+float coachAngle = 0;
+float trampolinePos = 7;
+float coachJumpHeight = 0;
+float flightLength = 14.0f;
+bool isCrashed = false;
+float wheel1Speed = 0;
 std::vector< glm::vec3 > vertices;
 std::vector< glm::vec3 > wheel1;
 std::vector< glm::vec3 > wheel2;
+std::vector< glm::vec3 > tramploine;
 
 std::vector< glm::vec3 > loadObj(string path)
 {
@@ -90,27 +97,28 @@ void computeDir(float deltaAngle) {
 
 void DrawCoach() {
 	glPushMatrix();
-	glColor3f(1.0f, 0.5f, 0.3f);
-	glTranslatef(coachSpan - coachPos, 0.85f, -13.5f + rangeFromPlayer);
-
-	glBegin(GL_TRIANGLES);	
-	for (int i = 0; i < vertices.size(); i++){
-		glVertex3f(vertices[i].x, vertices[i].y, vertices[i].z);
-	}
-	glEnd();
+	glTranslatef(coachSpan - coachPos, 0.85f + coachJumpHeight, -1.5f + rangeFromPlayer);
+		glPushMatrix();
+			glRotatef(coachAngle, 0, 0, 1);
+			glBegin(GL_TRIANGLES);	
+			for (int i = 0; i < vertices.size(); i++){
+				glVertex3f(vertices[i].x, vertices[i].y, vertices[i].z);
+			}
+			glEnd();
+		glPopMatrix();	
 	glPopMatrix();	
 }
 
 void DrawWheels()
 {
 	glPushMatrix();
-		glTranslatef(coachSpan - coachPos, 0, rangeFromPlayer);
-
+		glTranslatef(coachSpan - coachPos, coachJumpHeight, rangeFromPlayer);
+		glRotatef(coachAngle, 0, 0, 1);
 		//big wheel 1
 		glPushMatrix();		
-			glTranslatef(2.0, 0.89f, -12.55f);
+		glTranslatef(2.0 + wheel1Speed / 1.5, 0.89f + wheel1Speed/ 4, -0.55f + wheel1Speed);
 			glPushMatrix(); 
-				glRotatef(rotateAngle, 0, 0, 1);
+				glRotatef(wheelAngle, 0, 0, 1);
 				glBegin(GL_TRIANGLES);
 					for (int i = 0; i < wheel1.size(); i++){
 						glVertex3f(wheel1[i].x, wheel1[i].y, wheel1[i].z);
@@ -121,9 +129,9 @@ void DrawWheels()
 
 		//big wheel2
 		glPushMatrix();		
-		glTranslatef(2.0, 0.89f, -14.5f);
+		glTranslatef(2.0, 0.89f + wheel1Speed / 1.5, -2.5f - wheel1Speed);
 			glPushMatrix(); 
-				glRotatef(rotateAngle, 0, 0, 1);
+				glRotatef(wheelAngle, 0, 0, 1);
 				glBegin(GL_TRIANGLES);
 					for (int i = 0; i < wheel1.size(); i++){
 						glVertex3f(wheel1[i].x, wheel1[i].y, wheel1[i].z);
@@ -134,9 +142,9 @@ void DrawWheels()
 
 		//small wheel 1
 		glPushMatrix();		
-			glTranslatef(-1.5f, 0.65f, -14.6f);
+		glTranslatef(-1.5f + wheel1Speed/ 1.8, 0.65f + wheel1Speed, -2.6f + wheel1Speed);
 			glPushMatrix(); 
-				glRotatef(rotateAngle, 0, 0, 1);
+				glRotatef(wheelAngle, 0, 0, 1);
 				glBegin(GL_TRIANGLES);
 					for (int i = 0; i < wheel2.size(); i++){
 						glVertex3f(wheel2[i].x, wheel2[i].y, wheel2[i].z);
@@ -147,9 +155,9 @@ void DrawWheels()
 
 		//small wheel 2
 		glPushMatrix();		
-			glTranslatef(-1.5f, 0.65f, -12.5f);
+		glTranslatef(-1.5f, 0.65f + wheel1Speed / 3, -0.5f - wheel1Speed/3);
 			glPushMatrix(); 
-				glRotatef(rotateAngle, 0, 0, 1);
+				glRotatef(wheelAngle, 0, 0, 1);
 				glBegin(GL_TRIANGLES);
 					for (int i = 0; i < wheel2.size(); i++){
 						glVertex3f(wheel2[i].x, wheel2[i].y, wheel2[i].z);
@@ -158,6 +166,21 @@ void DrawWheels()
 			glPopMatrix();		
 		glPopMatrix();
 
+	glPopMatrix();
+}
+
+void DrawTrampoline()
+{
+	glPushMatrix();
+	glColor3f(1.0f, 0.5f, 0.3f);
+	glTranslatef(trampolinePos, 0, rangeFromPlayer + -1.5);
+	glRotatef(-90, 0, 1, 0);
+
+	glBegin(GL_TRIANGLES);
+	for (int i = 0; i < tramploine.size(); i++){
+		glVertex3f(tramploine[i].x, tramploine[i].y, tramploine[i].z);
+	}
+	glEnd();
 	glPopMatrix();
 }
 
@@ -172,7 +195,7 @@ void RenderScene(void)
 	glLoadIdentity();
 	gluLookAt(x, 1.0f, z,
 		x + lx, 1.0f, z + lz,
-		0.0f, 1.0f, 0.0f);
+		-0.0f, 1.0f, 0.0f);
 
 	GLfloat color[] = { 0.384f, 0.776f, 0.533f, 1.f };
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, color);
@@ -191,19 +214,44 @@ void RenderScene(void)
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, color3);
 	DrawWheels();
 
+	GLfloat color4[] = { 0.6, 0.301, 0.058, 0.2f };
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, color4);
+	DrawTrampoline();
+
 	glutSwapBuffers();
 }
 
 void TimerFunc(int value)
 {
 	if (coachPos < coachSpan + 40){
-		coachPos += 0.2f;		
+		if (!isCrashed){
+			coachPos += 0.3f;
+		}
 	}
-	else {
-		coachPos = 0;
+	if (coachSpan - coachPos - 3 <= trampolinePos && coachAngle > -25
+		&& coachSpan - coachPos >= trampolinePos - flightLength){
+		coachAngle -= 1;
+		coachPos += 0.09f;
 	}
+	if (coachSpan - coachPos - 3 <= trampolinePos
+		&& coachSpan - coachPos >= trampolinePos - flightLength){
+		coachJumpHeight += 0.1;
+	}
+	if (coachSpan - coachPos - 3 < trampolinePos - flightLength
+		&& coachJumpHeight > -0.8){
+		if (coachAngle <= 0){
+			coachAngle += 0.5;
+		}
+		coachJumpHeight -= 0.1;
+		if (coachJumpHeight <= -0.8){
+			isCrashed = true;
+		}
+	}
+	wheelAngle += 5;
 
-	rotateAngle+=5;
+	if (coachJumpHeight <= -0.3) {
+		wheel1Speed++;
+	}
 
 	glutPostRedisplay();
 	glutTimerFunc(14, TimerFunc, 1);
@@ -271,6 +319,7 @@ int main(int argc, char* argv[])
 	vertices = loadObj("D:\\coach5.obj");
 	wheel1 = loadObj("D:\\wheel4.obj");
 	wheel2 = loadObj("D:\\wheel3.obj");
+	tramploine = loadObj("D:\\tramploine.obj");
 
 	glutSpecialFunc(PressKey);
 	glutSpecialUpFunc(ReleaseKey);
@@ -280,7 +329,7 @@ int main(int argc, char* argv[])
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
-	GLfloat lightpos[] = { 0.0, 0.0, 0.0, 0.4};
+	GLfloat lightpos[] = { -7, 0.0, 10, 0.2};
 	glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
 
 	glutMainLoop();
