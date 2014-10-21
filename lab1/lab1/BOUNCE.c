@@ -13,7 +13,7 @@ GLfloat xCoach = -150.0f;
 GLfloat yCoach = 1.0f;
 
 GLfloat wheelRadius = 8.0f; 
-int spokesRotationDelay = 10;
+int spokesRotationDelay = 20;
 int spokesRotationTime = 0;
 
 //fly scene
@@ -159,8 +159,6 @@ void DrawCoach()
 		DrawCircle(xCoach - 5, yCoach - 23, xLeftWheelSpeed, yLeftWheelSpeed); // left
 		DrawCircle(xCoach + 45, yCoach - 23, xRightWheelSpeed, yRightWheelSpeed); //right
 	}
-
-	
 	
 	glPopMatrix();
 }
@@ -240,7 +238,7 @@ void TimerFunction(int value)
 	}
 
 	glutPostRedisplay();
-	glutTimerFunc(25, TimerFunction, 1);
+	glutTimerFunc(19, TimerFunction, 1);
 }
 
 void SetupRC(void)

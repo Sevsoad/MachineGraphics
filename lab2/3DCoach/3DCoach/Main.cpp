@@ -1,21 +1,21 @@
-#include "OpenGLSB.h"	
+#include "OpenGLSB.h"
 #include <vector>
 #include <stdio.h>
-#include <math.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include "glm\glm.hpp"
+#include "GLee\GLee.h"
+#include "Maths\Maths.h"
 
 using namespace std;
 
 float angle = 0.0f;
-float lx = 0.0f, lz = -1.0f;
+float lx = 0.0f, lz = -12.0f;
 float x = 0.0f, z = 7.0f;
-
 float deltaAngle = 0.0f;
 float coachPos = 0.0f;
-float coachSpan = 40.0f;
+float coachSpan = 20.0f;
 float deltaMove = 0;
 float wheelAngle = 0;
 float rotationCount = 0;
@@ -26,6 +26,14 @@ float coachJumpHeight = 0;
 float flightLength = 14.0f;
 bool isCrashed = false;
 float wheel1Speed = 0;
+
+VECTOR3D lightPosition(-0.1f, 58, 0);
+GLuint shadowMapTexture;
+const int shadowMapSize = 600;
+MATRIX4X4 cameraProjectionMatrix, cameraViewMatrix;
+MATRIX4X4 lightProjectionMatrix, lightViewMatrix;
+int windowWidth = 1200, windowHeight = 600;
+float ratio = 2;
 std::vector< glm::vec3 > vertices;
 std::vector< glm::vec3 > vertices_norm;
 std::vector< glm::vec3 > wheel1;
@@ -215,7 +223,6 @@ void DrawWheels()
 void DrawTrampoline()
 {
 	glPushMatrix();
-	glColor3f(1.0f, 0.5f, 0.3f);
 	glTranslatef(trampolinePos, 0, rangeFromPlayer + -1.5);
 	glRotatef(-90, 0, 1, 0);
 	glBegin(GL_TRIANGLES);
@@ -227,21 +234,14 @@ void DrawTrampoline()
 	glPopMatrix();
 }
 
-void RenderScene(void)
-{
-	if (deltaMove)
-		computePos(deltaMove);
-	if (deltaAngle)
-		computeDir(deltaAngle);
+void DrawScene(){
+	glColor3f(0.384f, 0.1f, 0.1f);
+	DrawCoach();
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
-	gluLookAt(x, 1.0f, z,
-		x + lx, 1.0f, z + lz,
-		-0.0f, 1.0f, 0.0f);
+	glColor3f(1.0f, 0.5f, 0.3f);
+	DrawTrampoline();
 
-	GLfloat color[] = { 0.384f, 0.776f, 0.533f, 1.f };
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, color);
+	glColor3f(0.384f, 0.776f, 0.533f);
 	glBegin(GL_QUADS);
 	glNormal3f(0, 1, 0);
 	glVertex3f(-100.0f, 0.0f, -100.0f);
@@ -252,20 +252,144 @@ void RenderScene(void)
 	glNormal3f(0, 1, 0);
 	glVertex3f(100.0f, 0.0f, -100.0f);
 	glEnd();
+}
 
-	GLfloat color2[] = { 0.862, 0.803, 0.156, 0.2f };
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, color2);
-	DrawCoach();
+void RenderScene(void)
+{
+	//First pass - from light's point of view
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/*GLfloat color3[] = { 0.862, 0.803, 0.156, 0.2f };
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, color3);
-	DrawWheels();*/
+	glMatrixMode(GL_PROJECTION);
+	glLoadMatrixf(lightProjectionMatrix);
 
-	GLfloat color4[] = { 0.6, 0.301, 0.058, 0.2f };
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, color4);
-	DrawTrampoline();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadMatrixf(lightViewMatrix);
 
+	//Use viewport the same size as the shadow map
+	glViewport(0, 0, shadowMapSize, shadowMapSize);
+
+	//Draw back faces into the shadow map
+	glCullFace(GL_FRONT);
+	
+
+	//Disable color writes, and use flat shading for speed
+	glShadeModel(GL_SMOOTH);
+	glColorMask(0, 0, 0, 0);
+
+	//Draw the scene
+	DrawScene();
+
+	//Read the depth buffer into the shadow map texture
+	glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
+	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, shadowMapSize, shadowMapSize);
+
+	//restore states
+	glCullFace(GL_BACK);
+	glShadeModel(GL_SMOOTH);
+	glColorMask(1, 1, 1, 1);
+
+
+	//2nd pass - Draw from camera's point of view
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	if (deltaMove)
+		computePos(deltaMove);
+	if (deltaAngle)
+		computeDir(deltaAngle);
+	
+	glMatrixMode(GL_PROJECTION);
+	glLoadMatrixf(cameraProjectionMatrix);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(x, 20.0f, z,
+		x - coachPos + coachSpan, 0.0f, z + lz,
+		-0.0f, 1.0f, 0);
+
+	glViewport(0, 0, windowWidth, windowHeight);
+
+	//Use dim light to represent shadowed areas
+	glLightfv(GL_LIGHT1, GL_POSITION, VECTOR4D(lightPosition));
+	glLightfv(GL_LIGHT1, GL_AMBIENT, white*0.5f);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, white*0.7f);
+	//glLightfv(GL_LIGHT1, GL_SPECULAR, black);
+	glEnable(GL_LIGHT1);
+	glEnable(GL_LIGHTING);
+
+	DrawScene();		
+	
+
+	//3rd pass
+	//Draw with bright light
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, white);
+	//glLightfv(GL_LIGHT1, GL_SPECULAR, white);
+
+	//Calculate texture matrix for projection
+	//This matrix takes us from eye space to the light's clip space
+	//It is postmultiplied by the inverse of the current view matrix when specifying texgen
+	static MATRIX4X4 biasMatrix(0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.5f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f);	//bias from [-1, 1] to [0, 1]
+	MATRIX4X4 textureMatrix = biasMatrix*lightProjectionMatrix*lightViewMatrix;
+
+	//Set up texture coordinate generation.
+	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+	glTexGenfv(GL_S, GL_EYE_PLANE, textureMatrix.GetRow(0));
+	glEnable(GL_TEXTURE_GEN_S);
+
+	glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+	glTexGenfv(GL_T, GL_EYE_PLANE, textureMatrix.GetRow(1));
+	glEnable(GL_TEXTURE_GEN_T);
+
+	glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+	glTexGenfv(GL_R, GL_EYE_PLANE, textureMatrix.GetRow(2));
+	glEnable(GL_TEXTURE_GEN_R);
+
+	glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+	glTexGenfv(GL_Q, GL_EYE_PLANE, textureMatrix.GetRow(3));
+	glEnable(GL_TEXTURE_GEN_Q);
+
+	//Bind & enable shadow map texture
+	glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
+	glEnable(GL_TEXTURE_2D);
+
+	
+	//Enable shadow comparison
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE);
+
+	//Shadow comparison should be true (ie not in shadow) if r<=texture
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC_ARB, GL_LEQUAL);
+
+	//Shadow comparison should generate an INTENSITY result
+	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE_ARB, GL_INTENSITY);
+
+	//Set alpha test to discard false comparisons
+	glAlphaFunc(GL_GEQUAL, 0.99f);
+	glEnable(GL_ALPHA_TEST);
+
+	DrawScene();
+
+	//Disable textures and texgen
+	glDisable(GL_TEXTURE_2D);
+
+	glDisable(GL_TEXTURE_GEN_S);
+	glDisable(GL_TEXTURE_GEN_T);
+	glDisable(GL_TEXTURE_GEN_R);
+	glDisable(GL_TEXTURE_GEN_Q);
+
+	//Restore other states
+	glDisable(GL_LIGHTING);
+	glDisable(GL_ALPHA_TEST);
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+
+	glFinish();
 	glutSwapBuffers();
+	glutPostRedisplay();
 }
 
 void TimerFunc(int value)
@@ -301,7 +425,7 @@ void TimerFunc(int value)
 	}
 
 	glutPostRedisplay();
-	glutTimerFunc(3, TimerFunc, 1);
+	glutTimerFunc(1, TimerFunc, 1);
 }
 
 void changeSize(int w, int h) {
@@ -346,15 +470,65 @@ void ReleaseKey(int key, int x, int y) {
 	}
 }
 
-void SetupRC(void)
+void Init(void)
 {
-	glClearColor(0.2f, 0.2f, 0.5f, 1.0f);	
+	//Load identity modelview
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glShadeModel(GL_SMOOTH);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+	//Depth states
+	glClearDepth(1.0f);
+	glDepthFunc(GL_LEQUAL);
+	glEnable(GL_DEPTH_TEST);
+
+	glEnable(GL_CULL_FACE);
+
+	//Create the shadow map texture
+	glGenTextures(1, &shadowMapTexture);
+	glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapSize, shadowMapSize, 0,
+		GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+	glEnable(GL_COLOR_MATERIAL);
+
+	glMaterialfv(GL_FRONT, GL_SPECULAR, white);
+	glMaterialf(GL_FRONT, GL_SHININESS, 16.0f);
+
+	//Calculate & save matrices
+	glPushMatrix();
+
+	glLoadIdentity();
+	gluPerspective(45.0f, ratio, 1.0f, 100.0f);
+	glGetFloatv(GL_MODELVIEW_MATRIX, cameraProjectionMatrix);
+
+	glLoadIdentity();
+	gluPerspective(45.0f, 1, 1.0f, 100.0f);
+	glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
+
+	glLoadIdentity();
+	gluLookAt(lightPosition.x, lightPosition.y, lightPosition.z,
+		0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f);
+	glGetFloatv(GL_MODELVIEW_MATRIX, lightViewMatrix);
+
+	glPopMatrix();
+
 }
 
 int main(int argc, char* argv[])
 {
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowPosition(50, 60);
 	glutInitWindowSize(1200, 600);
 	glutCreateWindow("Coach adventures in 3D");
@@ -364,23 +538,17 @@ int main(int argc, char* argv[])
 	glutTimerFunc(14, TimerFunc, 1);
 
 	vertices = loadObj("D:\\coachNorm.obj",  &vertices_norm);
-	wheel1 = loadObj("D:\\wheel4_norm.obj", &wheel1_norm);
+	/*wheel1 = loadObj("D:\\wheel4_norm.obj", &wheel1_norm);
 
-	wheel2 = loadObj("D:\\wheel3_norm.obj", &wheel2_norm);
-	tramploine = loadObj("D:\\untitled.obj", &tramploine_norm);
+	wheel2 = loadObj("D:\\wheel3_norm.obj", &wheel2_norm);*/
+	tramploine = loadObj("D:\\untitled2.obj", &tramploine_norm);
 
 	glutSpecialFunc(PressKey);
 	glutSpecialUpFunc(ReleaseKey);
 
 	glutReshapeFunc(changeSize);
-	SetupRC();
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
-	//glEnable(GL_NORMALIZE);
-	GLfloat lightpos[] = { -5, 15, 0, 0.5};
-	glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
-	//glFrontFace(GL_CCW);
+	Init();
+	
 	glutMainLoop();
 
 	return 0;
