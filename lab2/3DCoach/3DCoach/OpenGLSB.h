@@ -19,7 +19,7 @@
 #ifdef __APPLE__
 #include <Carbon/Carbon.h>
 #include <GLUT/glut.h>
-//#include <OpenGL/glext.h>
+
 #include "glext.h"
 
 //#define APIENTRY
