@@ -22,6 +22,9 @@
     <Filter Include="Math\MathSource">
       <UniqueIdentifier>{e6503067-e022-488b-98de-a17084d39467}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GLee">
+      <UniqueIdentifier>{d6bf59db-ca0a-434f-97ab-aa93e0b7b9c4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -70,6 +73,12 @@
     </ClInclude>
     <ClInclude Include="SOIL.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="glut.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GLee\GLee.h">
+      <Filter>GLee</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -75,6 +75,8 @@
     <ClCompile Include="Maths\VECTOR4D.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GLee\GLee.h" />
+    <ClInclude Include="glut.h" />
     <ClInclude Include="Maths\COLOR.h" />
     <ClInclude Include="Maths\Maths.h" />
     <ClInclude Include="Maths\MATRIX4X4.h" />

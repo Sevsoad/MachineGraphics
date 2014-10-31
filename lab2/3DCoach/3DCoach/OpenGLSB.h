@@ -8,10 +8,11 @@
 #ifdef _WIN32
 // Standard Windows includes
 #include <windows.h>
-#include "GLee/GLee.h"
-// #include <gl/gl.h>
-// #include <gl/glu.h>
+#include "GLee\GLee.h"
 #include "glut.h"
+#include "glm\glm.hpp"
+#include "Maths\Maths.h"
+#include "SOIL\src\SOIL.h"
 //#include "wglext.h"
 #endif
 
