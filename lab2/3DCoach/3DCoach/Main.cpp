@@ -23,8 +23,6 @@ float flightLength = 11.0f;
 bool isCrashed = false;
 float wheel1Speed = 0;
 
-//extern "C" 
-
 PFNGLACTIVETEXTUREARBPROC __myglextActiveTextureARB;
 PFNGLACTIVETEXTUREARBPROC __myglextActiveTexture;
 PFNGLMULTITEXCOORD2FARBPROC     glMultiTexCoord2f = NULL;
@@ -49,6 +47,7 @@ int imageWidth, imageHeight;
 float ratio = 2;
 GLuint kover;
 GLuint coachText;
+GLuint bricks;
 unsigned char* image;
 bool isSeconRender = false;
 bool pause = false;
@@ -65,6 +64,9 @@ std::vector< glm::vec3 > tramploine_norm;
 std::vector< glm::vec2 > trampoline_text;
 std::vector< glm::vec2 > wheel1_text;
 std::vector< glm::vec2 > wheel2_text;
+std::vector< glm::vec3 > cylinder;
+std::vector< glm::vec3 > cylinder_norm;
+std::vector< glm::vec2 > cylinder_text;
 
 std::vector< glm::vec3 > loadObj(string path, std::vector< glm::vec3 > *result_norm_vertices,
 	std::vector< glm::vec2 > *result_text_vertices)
@@ -239,7 +241,6 @@ void DrawCoach() {
 			glBegin(GL_TRIANGLES);	
 			for (int i = 0; i < vertices.size(); i++){				
 				glNormal3f(vertices_norm[i].x, vertices_norm[i].y, vertices_norm[i].z);
-				/*glTexCoord2f(vertices_text[i].x, vertices_text[i].y);*/
 				glMultiTexCoord2f(GL_TEXTURE3, vertices_text[i].x, vertices_text[i].y);
 				glVertex3f(vertices[i].x, vertices[i].y, vertices[i].z);
 			}			
@@ -248,87 +249,97 @@ void DrawCoach() {
 	glPopMatrix();	
 }
 
+void DrawCylinder(){
+	glPushMatrix();
+	glTranslatef(0, 0, rangeFromPlayer + -1.5);
+	glRotatef(0, 0, 0, 0);
+	glBegin(GL_TRIANGLES);
+	for (int i = 0; i < cylinder.size(); i++){
+		glNormal3f(cylinder_norm[i].x, cylinder_norm[i].y, cylinder_norm[i].z);
+		//glMultiTexCoord2f(GL_TEXTURE1, trampoline_text[i].x, trampoline_text[i].y);
+		glVertex3f(cylinder[i].x, cylinder[i].y, cylinder[i].z);
+	}
+	glEnd();
+	glPopMatrix();
+}
+
 void DrawWheels()
 {
 	glPushMatrix();
 		glTranslatef(coachSpan - coachPos, coachJumpHeight, rangeFromPlayer);
 		glRotatef(coachAngle, 0, 0, 1);
 
-		////big wheel 1
-		//glPushMatrix();		
-		//glTranslatef(2.0 + wheel1Speed / 1.5, 0.89f + wheel1Speed/ 4, -0.55f + wheel1Speed);
-		//	glPushMatrix(); 
-		//		glRotatef(wheelAngle, 0, 0, 1);
-		//		glBegin(GL_TRIANGLES);
-		//			for (int i = 0; i < wheel1.size(); i++){
-		//				glNormal3f(wheel1_norm[i].x, wheel1_norm[i].y, wheel1_norm[i].z);
-		//				glTexCoord2f(wheel1_text[i].x, wheel1_text[i].y);
-		//				glVertex3f(wheel1[i].x, wheel1[i].y, wheel1[i].z);
-		//			}
-		//		glEnd();
-		//	glPopMatrix();		
-		//glPopMatrix();
+		//big wheel 1
+		glPushMatrix();		
+		glTranslatef(2.0 + wheel1Speed / 1.5, 0.89f + wheel1Speed/ 4, -0.55f + wheel1Speed);
+			glPushMatrix(); 
+				glRotatef(wheelAngle, 0, 0, 1);
+				glBegin(GL_TRIANGLES);
+					for (int i = 0; i < wheel1.size(); i++){
+						glNormal3f(wheel1_norm[i].x, wheel1_norm[i].y, wheel1_norm[i].z);
+						glTexCoord2f(wheel1_text[i].x, wheel1_text[i].y);
+						glVertex3f(wheel1[i].x, wheel1[i].y, wheel1[i].z);
+					}
+				glEnd();
+			glPopMatrix();		
+		glPopMatrix();
 
-		////big wheel2
-		//glPushMatrix();		
-		//glTranslatef(2.0, 0.89f + wheel1Speed / 1.5, -2.5f - wheel1Speed);
-		//	glPushMatrix(); 
-		//		glRotatef(wheelAngle, 0, 0, 1);
-		//		glBegin(GL_TRIANGLES);
-		//			for (int i = 0; i < wheel1.size(); i++){
-		//				glNormal3f(wheel1_norm[i].x, wheel1_norm[i].y, wheel1_norm[i].z);
-		//				glTexCoord2f(wheel1_text[i].x, wheel1_text[i].y);
-		//				glVertex3f(wheel1[i].x, wheel1[i].y, wheel1[i].z);
-		//			}
-		//		glEnd();
-		//	glPopMatrix();		
-		//glPopMatrix();
+		//big wheel2
+		glPushMatrix();		
+		glTranslatef(2.0, 0.89f + wheel1Speed / 1.5, -2.5f - wheel1Speed);
+			glPushMatrix(); 
+				glRotatef(wheelAngle, 0, 0, 1);
+				glBegin(GL_TRIANGLES);
+					for (int i = 0; i < wheel1.size(); i++){
+						glNormal3f(wheel1_norm[i].x, wheel1_norm[i].y, wheel1_norm[i].z);
+						glTexCoord2f(wheel1_text[i].x, wheel1_text[i].y);
+						glVertex3f(wheel1[i].x, wheel1[i].y, wheel1[i].z);
+					}
+				glEnd();
+			glPopMatrix();		
+		glPopMatrix();
 
-		////small wheel 1
-		//glPushMatrix();		
-		//glTranslatef(-1.6f, 0.55f + wheel1Speed, -2.6f + wheel1Speed);
-		//	glPushMatrix(); 
-		//		glRotatef(wheelAngle, 0, 0, 1);
-		//		glBegin(GL_TRIANGLES);
-		//			for (int i = 0; i < wheel2.size(); i++){
-		//				glNormal3f(wheel2_norm[i].x, wheel2_norm[i].y, wheel2_norm[i].z);
-		//				glTexCoord2f(wheel2_text[i].x, wheel2_text[i].y);
-		//				glVertex3f(wheel2[i].x, wheel2[i].y, wheel2[i].z);
-		//			}
-		//		glEnd();
-		//	glPopMatrix();		
-		//glPopMatrix();
+		//small wheel 1
+		glPushMatrix();		
+		glTranslatef(-1.6f, 0.55f + wheel1Speed / 3.5, -2.6f + wheel1Speed * 1.5f);
+			glPushMatrix(); 
+				glRotatef(wheelAngle, 0, 0, 1);
+				glBegin(GL_TRIANGLES);
+					for (int i = 0; i < wheel2.size(); i++){
+						glNormal3f(wheel2_norm[i].x, wheel2_norm[i].y, wheel2_norm[i].z);
+						glTexCoord2f(wheel2_text[i].x, wheel2_text[i].y);
+						glVertex3f(wheel2[i].x, wheel2[i].y, wheel2[i].z);
+					}
+				glEnd();
+			glPopMatrix();		
+		glPopMatrix();
 
-		////small wheel 2
-		//glPushMatrix();		
-		//glTranslatef(-1.6f, 0.55f + wheel1Speed / 3, -0.5f - wheel1Speed/3);
-		//	glPushMatrix(); 
-		//		glRotatef(wheelAngle, 0, 0, 1);
-		//		glBegin(GL_TRIANGLES);
-		//			for (int i = 0; i < wheel2.size(); i++){
-		//				glNormal3f(wheel2_norm[i].x, wheel2_norm[i].y, wheel2_norm[i].z);
-		//				glTexCoord2f(wheel2_text[i].x, wheel2_text[i].y);
-		//				glVertex3f(wheel2[i].x, wheel2[i].y, wheel2[i].z);
-		//			}
-		//		glEnd();
-		//	glPopMatrix();		
-		//glPopMatrix();
+		//small wheel 2
+		glPushMatrix();		
+		glTranslatef(-1.6f, 0.55f + wheel1Speed / 2, -0.5f - wheel1Speed);
+			glPushMatrix(); 
+				glRotatef(wheelAngle, 0, 0, 1);
+				glBegin(GL_TRIANGLES);
+					for (int i = 0; i < wheel2.size(); i++){
+						glNormal3f(wheel2_norm[i].x, wheel2_norm[i].y, wheel2_norm[i].z);
+						glTexCoord2f(wheel2_text[i].x, wheel2_text[i].y);
+						glVertex3f(wheel2[i].x, wheel2[i].y, wheel2[i].z);
+					}
+				glEnd();
+			glPopMatrix();		
+		glPopMatrix();
 
 	glPopMatrix();
 }
 
 void DrawTrampoline()
 {
-	/*glActiveTexture(GL_TEXTURE2);
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);*/
-
 	glPushMatrix();
 	glTranslatef(trampolinePos, 0, rangeFromPlayer + -1.5);
 	glRotatef(180, 0, 1, 0);
 	glBegin(GL_TRIANGLES);
 	for (int i = 0; i < tramploine.size(); i++){
 		glNormal3f(tramploine_norm[i].x, tramploine_norm[i].y, tramploine_norm[i].z);
-		//glTexCoord2f(trampoline_text[i].x, trampoline_text[i].y);
 		glMultiTexCoord2f(GL_TEXTURE1, trampoline_text[i].x, trampoline_text[i].y);
 		glVertex3f(tramploine[i].x, tramploine[i].y, tramploine[i].z);
 	}
@@ -336,42 +347,78 @@ void DrawTrampoline()
 	glPopMatrix();
 }
 
-void DrawScene(){	
+void DrawTrampolineLighted()
+{
+	glActiveTexture(GL_TEXTURE1);
+	glEnable(GL_TEXTURE_2D);
+	glColor3f(1, 1, 1);
+	glPushMatrix();
+	glTranslatef(trampolinePos, 0, rangeFromPlayer + -1.5);
+	glRotatef(180, 0, 1, 0);
+	glBegin(GL_TRIANGLES);
+	for (int i = 0; i < tramploine.size(); i++){
+		glNormal3f(tramploine_norm[i].x, tramploine_norm[i].y, tramploine_norm[i].z);
+		glMultiTexCoord2f(GL_TEXTURE1, trampoline_text[i].x, trampoline_text[i].y);
+		glMultiTexCoord2f(GL_TEXTURE2, trampoline_text[i].x, trampoline_text[i].y);
+		glVertex3f(tramploine[i].x, tramploine[i].y, tramploine[i].z);
+	}
+	glEnd();
+	glPopMatrix();
+	glDisable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE2);
+}
+
+void DrawFloor(){	
 	glColor3f(1, 1, 1);
 	glBegin(GL_QUADS);
 	glNormal3f(0, 1, 0);
+	glMultiTexCoord2f(GL_TEXTURE4, -10.0f, -10.0f);
 	glVertex3f(-100.0f, 0.0f, -100.0f);
 	glNormal3f(0, 1, 0);
+	glMultiTexCoord2f(GL_TEXTURE4, -10.0f, 10.0f);
 	glVertex3f(-100.0f, 0.0f, 100.0f);
 	glNormal3f(0, 1, 0);
+	glMultiTexCoord2f(GL_TEXTURE4, 10.0f, 10.0f);
 	glVertex3f(100.0f, 0.0f, 100.0f);
 	glNormal3f(0, 1, 0);
+	glMultiTexCoord2f(GL_TEXTURE4, 10.0f, -10.0f);
 	glVertex3f(100.0f, 0.0f, -100.0f);
-	glEnd();	
-	
-	if (isSeconRender){
-		//glDisable(GL_TEXTURE_2D);
-		glActiveTexture(GL_TEXTURE1);	
+	glEnd();
+}
+
+void DrawFloorLighted(){
+	glColor3f(1, 1, 1);
+	glBegin(GL_QUADS);
+	glNormal3f(0, 1, 0);
+	glMultiTexCoord2f(GL_TEXTURE4, -10.0f, -10.0f);
+	glVertex3f(-100.0f, 0.0f, -100.0f);
+	glNormal3f(0, 1, 0);
+	glMultiTexCoord2f(GL_TEXTURE4, -10.0f, 10.0f);
+	glVertex3f(-100.0f, 0.0f, 100.0f);
+	glNormal3f(0, 1, 0);
+	glMultiTexCoord2f(GL_TEXTURE4, 10.0f, 10.0f);
+	glVertex3f(100.0f, 0.0f, 100.0f);
+	glNormal3f(0, 1, 0);
+	glMultiTexCoord2f(GL_TEXTURE4, 10.0f, -10.0f);
+	glVertex3f(100.0f, 0.0f, -100.0f);
+	glEnd();
+}
+
+void DrawScene(){	
+	if (isSeconRender){	
+		glActiveTexture(GL_TEXTURE4);
 		glEnable(GL_TEXTURE_2D);
-		//glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		//glBindTexture(GL_TEXTURE_2D, kover);
-		
-		glColor3f(1, 1, 1);
-		glPushMatrix();
-		glTranslatef(trampolinePos, 0, rangeFromPlayer + -1.5);
-		glRotatef(180, 0, 1, 0);
-		glBegin(GL_TRIANGLES);
-		for (int i = 0; i < tramploine.size(); i++){
-			glNormal3f(tramploine_norm[i].x, tramploine_norm[i].y, tramploine_norm[i].z);
-			glMultiTexCoord2f(GL_TEXTURE1, trampoline_text[i].x, trampoline_text[i].y);
-			glMultiTexCoord2f(GL_TEXTURE2, trampoline_text[i].x, trampoline_text[i].y);
-			glVertex3f(tramploine[i].x, tramploine[i].y, tramploine[i].z);
-		}
-		glEnd();
-		glPopMatrix();		
+		DrawFloorLighted();
 		glDisable(GL_TEXTURE_2D);
+		DrawTrampolineLighted();	
 		glActiveTexture(GL_TEXTURE2);
+		return;
 	}
+
+	glActiveTexture(GL_TEXTURE4);
+	glEnable(GL_TEXTURE_2D);
+	DrawFloor();
+	glDisable(GL_TEXTURE_2D);
 }
 
 void RenderScene(void)
@@ -395,9 +442,11 @@ void RenderScene(void)
 	glCullFace(GL_FRONT);	
 	//Draw the scene	
 	glColor3f(1, 1, 1);
-	DrawScene();
+	DrawFloor();
+	DrawCylinder();
 	DrawCoach();
 	DrawTrampoline();
+	DrawWheels();
 	//Read the depth buffer into the shadow map texture
 	glActiveTexture(GL_TEXTURE2);
 	glEnable(GL_TEXTURE_2D);
@@ -430,20 +479,21 @@ void RenderScene(void)
 	//Use dim light to represent shadowed areas
 	glLightfv(GL_LIGHT1, GL_POSITION, VECTOR4D(lightPosition));
 	glLightfv(GL_LIGHT1, GL_AMBIENT, white*0.2f);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, white*0.2f);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, white*0.4f);
 	glEnable(GL_LIGHT1);
 	glEnable(GL_LIGHTING);
 
-	//glActiveTexture(GL_TEXTURE1);
-	DrawScene();	
+	DrawScene();
+	glColor3f(0, 0, 0);
+	DrawCylinder();
+	DrawWheels();
+	glColor3f(1, 1, 1);
 
-	//glBindTexture(GL_TEXTURE_2D, coachText);
 	glActiveTexture(GL_TEXTURE3);
 	glEnable(GL_TEXTURE_2D);
 	DrawCoach();
 	glDisable(GL_TEXTURE_2D);
 
-	//glColor3f(1, 1, 1);
 	glActiveTexture(GL_TEXTURE1);
 	glEnable(GL_TEXTURE_2D);
 	DrawTrampoline();
@@ -452,7 +502,6 @@ void RenderScene(void)
 	
 	#pragma region third
 	//3rd pass
-
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, white);
 
 	//Calculate texture matrix for projection
@@ -481,9 +530,6 @@ void RenderScene(void)
 	glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
 	glTexGenfv(GL_Q, GL_EYE_PLANE, textureMatrix.GetRow(3));
 	glEnable(GL_TEXTURE_GEN_Q);		
-
-	
-	
 	
 	//Enable shadow comparison
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE);
@@ -499,6 +545,9 @@ void RenderScene(void)
 	glEnable(GL_ALPHA_TEST);
 
 	isSeconRender = true;
+	glColor3f(0.1f, 0.1f, 0.1f);
+	DrawCylinder();
+	glColor3f(1, 1, 1);
 	DrawScene();		
 	isSeconRender = false;
 
@@ -534,10 +583,11 @@ void TimerFunc(int value)
 				coachPos += 0.3f;
 			}
 		}
-		if (coachSpan - coachPos - 3 <= trampolinePos && coachAngle > -25
+		if (coachSpan - coachPos - 3 <= trampolinePos + 1.5 && coachAngle > -25
 			&& coachSpan - coachPos >= trampolinePos - flightLength){
 			coachAngle -= 1;
 			coachPos += 0.09f;
+			coachJumpHeight += 0.01;
 		}
 		if (coachSpan - coachPos - 3 <= trampolinePos
 			&& coachSpan - coachPos >= trampolinePos - flightLength){
@@ -549,13 +599,13 @@ void TimerFunc(int value)
 				coachAngle += 0.5;
 			}
 			coachJumpHeight -= 0.1;
-			if (coachJumpHeight <= -0.8){
+			if (coachJumpHeight <= -0.8f){
 				isCrashed = true;
 			}
 		}
 		wheelAngle += 5;
 
-		if (coachJumpHeight <= -0.3) {
+		if (coachJumpHeight < -0.01) {
 			wheel1Speed++;
 		}
 	}
@@ -606,12 +656,27 @@ void Init(void)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);	
 
+	glGenTextures(1, &bricks);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, bricks);
+	glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_SUBTRACT);
+	glEnable(GL_TEXTURE_2D);
+	image = SOIL_load_image("floor2.jpg", &imageWidth, &imageHeight, 0, SOIL_LOAD_RGB);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight, 0, GL_RGB,
+		GL_UNSIGNED_BYTE, image);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	SOIL_free_image_data(image);
+	glDisable(GL_TEXTURE_2D);
+
 	glGenTextures(1, &coachText);
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, coachText);
 	glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_SUBTRACT);
 	glEnable(GL_TEXTURE_2D);
-	image = SOIL_load_image("grass.png", &imageWidth, &imageHeight, 0, SOIL_LOAD_RGB);
+	image = SOIL_load_image("wood2.jpg", &imageWidth, &imageHeight, 0, SOIL_LOAD_RGB);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight, 0, GL_RGB,
 		GL_UNSIGNED_BYTE, image);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -693,10 +758,12 @@ int main(int argc, char* argv[])
 	initGLextensions();
 
 	vertices = loadObj("D:\\coachUV2.obj",  &vertices_norm, &vertices_text);
-	//wheel1 = loadObj("D:\\newWheel1.obj", &wheel1_norm, &wheel1_text);
+	wheel1 = loadObj("D:\\newWheel3.obj", &wheel1_norm, &wheel1_text);
 
-	//wheel2 = loadObj("D:\\newWheel1.obj", &wheel2_norm, &wheel2_text);
-	tramploine = loadObj("D:\\trampUV2.obj", &tramploine_norm, &trampoline_text);
+	wheel2 = loadObj("D:\\newWheel2.obj", &wheel2_norm, &wheel2_text);
+	tramploine = loadObj("D:\\trampUV3.obj", &tramploine_norm, &trampoline_text);
+
+	cylinder = loadObj("D:\\cylinder.obj", &cylinder_norm, &cylinder_text);
 
 	glutSpecialFunc(PressKey);
 	glutSpecialUpFunc(ReleaseKey);
